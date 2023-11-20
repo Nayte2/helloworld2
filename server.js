@@ -1,17 +1,155 @@
-var HTTP_PORT = process.env.PORT || 8080;
-var express = require("express");
-var app = express();
-// setup a 'root route' to listen on the default url path
+/********************************************************************************
+*  WEB322 – Assignment 05
+* 
+*  I declare that this assignment is my own work in accordance with Seneca's
+*  Academic Integrity Policy:
+* 
+*  https://www.senecacollege.ca/about/policies/academic-integrity-policy.html
+* 
+*  Name: Nathan Tsang Student ID: 132715228 Date: November 18, 2023
+*
+*  Published URL: https://perfect-cod-hose.cyclic.app
+*
+********************************************************************************/
+const express = require("express");
+const path = require("path");
+
+const legoData = require("./modules/legoSets");
+
+
+const app = express();
+app.use(express.urlencoded({ extended: true }));
+
+const PORT = process.env.PORT || 8080;
+app.set('views', path.join(__dirname, 'views'));
+
+app.set("view engine", "ejs");
+app.use(express.static("public"));
+
 app.get("/", (req, res) => {
-    const linkToAbout = '<a href="/about">About</a>';
-res.send(`<h2>Nathan Tsang - 132715228 <h2> ${linkToAbout}`);
+  res.render("home");
 });
-// setup a route to listen on the '/about' url path
+
 app.get("/about", (req, res) => {
-res.json({course: "WEB322", section: "NGG", task: "In-class Assignment 1"});
+  res.render("about");
 });
-// setup http server to listen on HTTP_PORT
-app.listen(HTTP_PORT);
+
+app.get("/lego/sets", (req, res) => {
+  if (req.query.theme) {
+    legoData
+      .getSetsByTheme(req.query.theme)
+      .then((data) => {
+        res.render("sets", { sets: data });
+      })
+      .catch((err) =>
+        res.status(404).render("404", {
+          message: "No Sets found for a matching theme",
+        })
+      );
+  }
+
+  legoData
+    .getAllSets()
+    .then((data) => res.render("sets", { sets: data }))
+    .catch((err) => {
+      console.log(err);
+      res.status(404).render("404", {
+        message: "I'm sorry, we're unable to find what you're looking for",
+      });
+    });
+});
+
+app.get("/lego/sets/:id", (req, res) => {
+  legoData
+    .getSetByNum(req.params.id)
+    .then((data) => res.render("set", { set: data }))
+    .catch((err) =>
+      res.status(404).render("404", {
+        message: "No Sets found for a specific set num",
+      })
+    );
+});
 
 
+app.post("/lego/addSet", (req, res) => {
+  legoData.addSet(req.body) 
+    .then(() => res.redirect("/lego/sets"))
+    .catch((err) => {
 
+      console.error(err);
+
+      res.status(500).render("500", {
+        message: `I'm sorry, but we have encountered the following error: ${err}`,
+      });
+    });
+});
+
+app.get("/lego/addSet", (req, res) => {
+  legoData
+    .getAllThemes()
+    .then((themeData) => res.render("addSet", { themes: themeData }))
+    .catch((err) =>
+      res.status(404).render("404", {
+        message: `${err.message}`,
+      })
+    );
+});
+
+
+// GET route to display the form
+app.get('/lego/editSet/:num', async (req, res) => {
+  try {
+    const [set, themes] = await Promise.all([
+      legoData.getSetByNum(req.params.num),
+      legoData.getAllThemes(),
+    ]);
+
+    res.render('editSet', { set, themes });
+  } catch (error) {
+    res.status(404).render('404', { message: error.message });
+  }
+});
+
+// POST route to update the set
+app.post('/lego/editSet', async (req, res) => {
+  try {
+    const setData = {
+      name: req.body.name,
+      year: req.body.year,
+      num_parts: req.body.num_parts,
+      img_url: req.body.img_url,
+      theme_id: req.body.theme_id,
+      set_num: req.body.set_num,
+    };
+
+    await legoData.editSet(req.body.set_num, setData);
+
+    res.redirect('/lego/sets');
+  } catch (error) {
+    res.status(500).render('500', { message: `Error editing set: ${error.message}` });
+  }
+});
+
+
+app.get("/lego/deleteSet/:num", async (req, res) => {
+  legoData
+    .deleteSet(req.params.num)
+    .then(() => res.redirect("/lego/sets"))
+    .catch((err) =>
+      res.render("500", {
+        message: `I'm sorry, but we have encountered the following error: ${err}`,
+      })
+    );
+});
+
+
+app.use((req, res) => {
+  res.status(404).render("404", {
+    message: "No view matched for a specific route",
+  });
+});
+
+legoData
+  .initialize()
+  .then(() => app.listen(PORT, () => console.log(`listening on port ${PORT}`)))
+  .catch((error) => console.log(`Failed to listen on port ${PORT}`));
