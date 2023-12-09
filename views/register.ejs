@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lego Collection</title>
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+
+<body tabindex="-1">
+
+  <%- include('partials/navbar',{page: ''}) %>
+
+  <div class="container mx-auto p-4">
+
+    <div class="hero bg-base-200 rounded-lg p-6">
+      <div class="hero-content text-center ">
+        <div class="max-w-md">
+          <h1 class="text-5xl font-bold">Register</h1>
+          <p>Please provide your credentials below</p>
+        </div>
+      </div>
+    </div>
+
+    <form class="max-w-md bg-base-100 rounded-lg p-6 shadow-md" method="post" action="/register">
+      <% if (errorMessage) { %>
+      <div class="text-red-500 text-center mb-4"><%= errorMessage %></div>
+      <% } %>
+      <% if (successMessage) { %>
+      <div class="text-green-500 text-center mb-4"><%= successMessage %></div>
+      <% } %>
+      <div class="mb-4">
+        <label for="userName" class="block mb-1">User Name</label>
+        <input type="text" id="userName" name="userName" class="w-full rounded border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 px-4 py-2" placeholder="Username" required>
+      </div>
+      <div class="mb-4">
+        <label for="password" class="block mb-1">Password</label>
+        <input type="password" id="password" name="password" class="w-full rounded border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 px-4 py-2" placeholder="Password" required>
+      </div>
+      <div class="mb-4">
+        <label for="password2" class="block mb-1">Confirm Password</label>
+        <input type="password" id="password2" name="password2" class="w-full rounded border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 px-4 py-2" placeholder="Confirm Password" required>
+      </div>
+      <div class="mb-4">
+        <label for="email" class="block mb-1">Email Address</label>
+        <input type="email" id="email" name="email" class="w-full rounded border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 px-4 py-2" placeholder="Email" required>
+      </div>
+      <div class="text-center">
+        <button type="submit" class="btn btn-primary">Register</button>
+      </div>
+    </form>
+  </div>
+
+</body>
+
+</html>
